@@ -1,0 +1,38 @@
+{
+  "BOT": {
+    "type": "mssql",
+    "server": "localhost",
+    "port": 1433,
+    "database": "TelegramBot",
+    "user": "bot_user",
+    "password": "contraseña_bot",
+    "options": {
+      "encrypt": false,
+      "enableArithAbort": true,
+      "trustServerCertificate": true
+    },
+    "pool": {
+      "max": 5,
+      "min": 0,
+      "idleTimeoutMillis": 30000
+    }
+  },
+  "SQL": {
+    "type": "mssql",
+    "server": "localhost",
+    "port": 1433,
+    "database": "EmpresaDB",
+    "user": "consulta_user",
+    "password": "contraseña_consulta",
+    "options": {
+      "encrypt": false,
+      "enableArithAbort": true,
+      "trustServerCertificate": true
+    },
+    "pool": {
+      "max": 10,
+      "min": 0,
+      "idleTimeoutMillis": 30000
+    }
+  }
+}

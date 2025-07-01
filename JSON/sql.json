@@ -1,0 +1,18 @@
+{
+  "type": "mssql",
+  "server": "192.168.0.46\\SQLEXPRESS",
+  "port": 1433,
+  "database": "TelegramBot",
+  "user": "km",
+  "password": "Asdf1234",
+  "options": {
+    "encrypt": false,
+    "enableArithAbort": true,
+    "trustServerCertificate": true
+  },
+  "pool": {
+    "max": 10,
+    "min": 0,
+    "idleTimeoutMillis": 30000
+  }
+}

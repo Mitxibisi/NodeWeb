@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Editor de Archivos JSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1746a0;
+      --bg: #f4f6fa;
+      --white: #fff;
+      --border: #d1d5db;
+      --success: #2e7d32;
+      --error: #c62828;
+      --label: #17406a;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --object-bg: #eaf1fb;
+      --object-border: #b6c7e3;
+      --input-focus: #2563eb22;
+      --table-header: #eaf1fb;
+      --table-row: #f8fafc;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: #222;
+    }
+    .container {
+      max-width: 800px;
+      margin: 48px auto;
+      background: var(--white);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 2.5em 2.5em 2em 2.5em;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5em;
+      animation: fadeIn 0.7s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 0.5em;
+      font-size: 2.1em;
+      letter-spacing: 0.01em;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5em;
+    }
+    .field-group {
+      margin-bottom: 1.2em;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3em;
+    }
+    .json-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5em;
+      background: var(--white);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px #2563eb11;
+      animation: fadeIn 0.7s;
+    }
+    .json-table th, .json-table td {
+      padding: 0.7em 1em;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 1em;
+    }
+    .json-table th {
+      background: var(--table-header);
+      color: var(--primary-dark);
+      font-weight: 600;
+      font-size: 1.05em;
+    }
+    .json-table tr:last-child td {
+      border-bottom: none;
+    }
+    .json-table td {
+      background: var(--table-row);
+      vertical-align: middle;
+    }
+    .json-table input[type="text"] {
+      width: 100%;
+      padding: 0.4em 0.7em;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-family: 'Fira Mono', 'Consolas', monospace;
+      font-size: 1em;
+      transition: border-color 0.2s;
+    }
+    .json-table input[type="text"]:focus {
+      border-color: var(--primary);
+      outline: none;
+      background: #eaf1fb;
+    }
+    .json-table input[type="checkbox"] {
+      transform: scale(1.2);
+      accent-color: var(--primary);
+    }
+    .json-table .array-controls {
+      display: flex;
+      gap: 0.5em;
+      align-items: center;
+    }
+    .json-table .array-controls button {
+      background: #eaf1fb;
+      color: #2563eb;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0.3em 0.7em;
+      font-size: 1em;
+      transition: background 0.2s;
+    }
+    .json-table .array-controls button:hover {
+      background: #d1e6fd;
+    }
+    .json-table .remove-btn {
+      color: #c62828;
+      background: #fff0f0;
+    }
+    .json-table .remove-btn:hover {
+      background: #ffd6d6;
+    }
+    .type-badge {
+      background: #e0e7ef;
+      color: #2563eb;
+      border-radius: 6px;
+      font-size: 0.85em;
+      padding: 0.1em 0.6em;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      margin-right: 0.3em;
+      display: inline-block;
+    }
+    button.save-btn {
+      background: linear-gradient(90deg, var(--primary) 60%, var(--primary-dark) 100%);
+      color: var(--white);
+      font-weight: bold;
+      padding: 0.95em;
+      border: none;
+      cursor: pointer;
+      margin-top: 1.2em;
+      font-size: 1.08em;
+      letter-spacing: 0.03em;
+      box-shadow: 0 2px 8px #2563eb11;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+      border-radius: 8px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5em;
+    }
+    button.save-btn:hover, button.save-btn:focus {
+      background: linear-gradient(90deg, var(--primary-dark) 60%, var(--primary) 100%);
+      box-shadow: 0 4px 16px #2563eb22;
+      transform: translateY(-2px) scale(1.03);
+    }
+    #msg {
+      margin-top: 1em;
+      min-height: 1.5em;
+      font-size: 1.08em;
+      text-align: center;
+      transition: color 0.2s;
+    }
+    .success { color: var(--success); }
+    .error { color: var(--error); }
+    @media (max-width: 900px) {
+      .container { padding: 1em; }
+      .json-table th, .json-table td { font-size: 0.97em; }
+      h1 { font-size: 1.3em; }
+    }
+    @media (max-width: 600px) {
+      .json-table th, .json-table td { padding: 0.5em 0.3em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><i class="fa-solid fa-database"></i> Editor de Archivos JSON</h1>
+    <div class="field-group">
+      <label for="fileSelect"><i class="fa-solid fa-folder-open"></i> Selecciona un archivo JSON:</label>
+      <select id="fileSelect"></select>
+    </div>
+    <form id="jsonForm"></form>
+    <button class="save-btn" id="saveBtn"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</button>
+    <div id="msg"></div>
+  </div>
+  <script>
+    const fileSelect = document.getElementById('fileSelect');
+    const jsonForm = document.getElementById('jsonForm');
+    const saveBtn = document.getElementById('saveBtn');
+    const msg = document.getElementById('msg');
+    let currentJson = {};
+
+    // Cargar lista de archivos
+    async function loadFiles() {
+      msg.textContent = '';
+      const res = await fetch('/json-files');
+      const files = await res.json();
+      fileSelect.innerHTML = files.map(f => `<option value="${f}">${f}</option>`).join('');
+      if (files.length) loadFile(files[0]);
+      else {
+        jsonForm.innerHTML = '';
+        msg.textContent = 'No hay archivos JSON en la carpeta.';
+        msg.className = 'error';
+      }
+    }
+
+    // Cargar contenido de archivo seleccionado y mostrar como tabla/formulario
+    async function loadFile(name) {
+      msg.textContent = '';
+      const res = await fetch(`/json-file?name=${encodeURIComponent(name)}`);
+      if (res.ok) {
+        try {
+          currentJson = JSON.parse(await res.text());
+          renderForm(currentJson);
+        } catch {
+          jsonForm.innerHTML = '<div class="error">El archivo no contiene un JSON válido.</div>';
+        }
+      } else {
+        jsonForm.innerHTML = '';
+        msg.textContent = 'Error al cargar el archivo';
+        msg.className = 'error';
+      }
+    }
+
+    // Renderizar tabla para objetos planos, arrays y objetos anidados
+    function renderForm(obj, parentKey = '') {
+      jsonForm.innerHTML = '';
+      jsonForm.appendChild(renderTable(obj, parentKey));
+    }
+
+    function renderTable(obj, parentKey) {
+      // Si es un array de objetos, mostrar como tabla de filas
+      if (Array.isArray(obj) && obj.every(item => typeof item === 'object' && item !== null && !Array.isArray(item))) {
+        const table = document.createElement('table');
+        table.className = 'json-table';
+        // Encabezados
+        const keys = Array.from(new Set(obj.flatMap(item => Object.keys(item))));
+        const thead = document.createElement('thead');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<th>#</th>` + keys.map(k => `<th>${k}</th>`).join('') + `<th>Acciones</th>`;
+        thead.appendChild(tr);
+        table.appendChild(thead);
+        // Filas
+        const tbody = document.createElement('tbody');
+        obj.forEach((item, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${idx + 1}</td>`;
+          keys.forEach(k => {
+            const tipo = typeof item[k];
+            let input;
+            if (tipo === 'boolean') {
+              input = `<input type="checkbox" name="${parentKey}[${idx}].${k}" ${item[k] ? 'checked' : ''}>`;
+            } else {
+              input = `<input type="text" name="${parentKey}[${idx}].${k}" value="${item[k] !== undefined ? item[k] : ''}">`;
+            }
+            tr.innerHTML += `<td>${input}</td>`;
+          });
+          tr.innerHTML += `<td class="array-controls">
+            <button type="button" class="remove-btn" title="Eliminar fila" onclick="removeArrayRow('${parentKey}',${idx})"><i class="fa-solid fa-minus"></i></button>
+          </td>`;
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        // Botón agregar fila
+        const tfoot = document.createElement('tfoot');
+        const trFoot = document.createElement('tr');
+        trFoot.innerHTML = `<td colspan="${keys.length + 2}">
+          <button type="button" onclick="addArrayRow('${parentKey}', ${JSON.stringify(keys)})"><i class="fa-solid fa-plus"></i> Añadir fila</button>
+        </td>`;
+        tfoot.appendChild(trFoot);
+        table.appendChild(tfoot);
+        return table;
+      }
+
+      // Si es un array simple
+      if (Array.isArray(obj)) {
+        const table = document.createElement('table');
+        table.className = 'json-table';
+        const thead = document.createElement('thead');
+        thead.innerHTML = `<tr><th>Índice</th><th>Valor</th><th>Acciones</th></tr>`;
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        obj.forEach((item, idx) => {
+          const tipo = typeof item;
+          let input;
+          if (tipo === 'boolean') {
+            input = `<input type="checkbox" name="${parentKey}[${idx}]" ${item ? 'checked' : ''}>`;
+          } else {
+            input = `<input type="text" name="${parentKey}[${idx}]" value="${item ?? ''}">`;
+          }
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${idx}</td>
+            <td>${input}</td>
+            <td class="array-controls">
+              <button type="button" class="remove-btn" title="Eliminar elemento" onclick="removeArrayRow('${parentKey}',${idx})"><i class="fa-solid fa-minus"></i></button>
+            </td>`;
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        // Botón agregar elemento
+        const tfoot = document.createElement('tfoot');
+        tfoot.innerHTML = `<tr><td colspan="3">
+          <button type="button" onclick="addArrayRow('${parentKey}')"><i class="fa-solid fa-plus"></i> Añadir elemento</button>
+        </td></tr>`;
+        table.appendChild(tfoot);
+        return table;
+      }
+
+      // Si es un objeto plano
+      if (typeof obj === 'object' && obj !== null) {
+        const table = document.createElement('table');
+        table.className = 'json-table';
+        const thead = document.createElement('thead');
+        thead.innerHTML = `<tr><th>Clave</th><th>Tipo</th><th>Valor</th></tr>`;
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        Object.entries(obj).forEach(([key, value]) => {
+          const tipo = (value === null) ? 'null'
+            : Array.isArray(value) ? 'array'
+            : typeof value;
+          let input;
+          if (tipo === 'boolean') {
+            input = `<input type="checkbox" name="${parentKey ? parentKey + '.' : ''}${key}" ${value ? 'checked' : ''}>`;
+          } else if (tipo === 'object' || tipo === 'array') {
+            input = '';
+          } else {
+            input = `<input type="text" name="${parentKey ? parentKey + '.' : ''}${key}" value="${value ?? ''}">`;
+          }
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${key}</td>
+            <td><span class="type-badge">${tipo}</span></td>
+            <td>${input}</td>`;
+          tbody.appendChild(tr);
+          // Si es objeto o array anidado, mostrar debajo
+          if (tipo === 'object' || tipo === 'array') {
+            const trNested = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 3;
+            td.style.background = "#f4f6fa";
+            td.appendChild(renderTable(value, parentKey ? parentKey + '.' + key : key));
+            trNested.appendChild(td);
+            tbody.appendChild(trNested);
+          }
+        });
+        table.appendChild(tbody);
+        return table;
+      }
+      // Si es un valor simple
+      const span = document.createElement('span');
+      span.textContent = obj;
+      return span;
+    }
+
+    // Array row management
+    window.addArrayRow = function(parentKey, keys) {
+      let ref = currentJson;
+      if (parentKey) {
+        parentKey.split('.').forEach(k => {
+          if (k.endsWith(']')) {
+            // Array index
+            const [arrKey, idx] = k.match(/([^\[]+)\[(\d+)\]/).slice(1, 3);
+            ref = ref[arrKey][parseInt(idx)];
+          } else {
+            ref = ref[k];
+          }
+        });
+      }
+      if (Array.isArray(ref)) {
+        if (keys && Array.isArray(keys)) {
+          // Array de objetos
+          const obj = {};
+          keys.forEach(k => obj[k] = '');
+          ref.push(obj);
+        } else {
+          ref.push('');
+        }
+        renderForm(currentJson);
+      }
+    };
+
+    window.removeArrayRow = function(parentKey, idx) {
+      let ref = currentJson;
+      if (parentKey) {
+        parentKey.split('.').forEach(k => {
+          if (k.endsWith(']')) {
+            // Array index
+            const [arrKey, i] = k.match(/([^\[]+)\[(\d+)\]/).slice(1, 3);
+            ref = ref[arrKey][parseInt(i)];
+          } else {
+            ref = ref[k];
+          }
+        });
+      }
+      if (Array.isArray(ref)) {
+        ref.splice(idx, 1);
+        renderForm(currentJson);
+      }
+    };
+
+    // Convertir los datos del formulario a objeto JSON anidado
+    function formDataToJson(formData) {
+      const result = {};
+      for (const [fullKey, value] of formData.entries()) {
+        // Detectar si es array usando [n] en el nombre
+        const arrayMatch = fullKey.match(/^(.+)\[(\d+)\](?:\.(.+))?$/);
+        if (arrayMatch) {
+          const arrKey = arrayMatch[1];
+          const idx = parseInt(arrayMatch[2], 10);
+          const subKey = arrayMatch[3];
+          if (!result[arrKey]) result[arrKey] = [];
+          if (subKey) {
+            if (!result[arrKey][idx]) result[arrKey][idx] = {};
+            if (value === 'true' || value === 'false') {
+              result[arrKey][idx][subKey] = value === 'true';
+            } else {
+              try {
+                result[arrKey][idx][subKey] = JSON.parse(value);
+              } catch {
+                result[arrKey][idx][subKey] = value;
+              }
+            }
+          } else {
+            if (value === 'true' || value === 'false') {
+              result[arrKey][idx] = value === 'true';
+            } else {
+              try {
+                result[arrKey][idx] = JSON.parse(value);
+              } catch {
+                result[arrKey][idx] = value;
+              }
+            }
+          }
+          continue;
+        }
+        // Manejo de objetos anidados
+        const keys = fullKey.split('.');
+        let ref = result;
+        keys.forEach((k, i) => {
+          if (i === keys.length - 1) {
+            if (value === 'true' || value === 'false') {
+              ref[k] = value === 'true';
+            } else {
+              try {
+                ref[k] = JSON.parse(value);
+              } catch {
+                ref[k] = value;
+              }
+            }
+          } else {
+            if (!ref[k]) ref[k] = {};
+            ref = ref[k];
+          }
+        });
+      }
+      return result;
+    }
+
+    // Guardar cambios
+    async function saveFile(e) {
+      e.preventDefault();
+      msg.textContent = '';
+      msg.className = '';
+      const formData = new FormData(jsonForm);
+      const newJson = formDataToJson(formData);
+
+      // Validación básica: no permitir campos vacíos
+      let valid = true;
+      let errorField = '';
+      function checkEmpty(obj, path = '') {
+        for (const [k, v] of Object.entries(obj)) {
+          const currentPath = path ? `${path}.${k}` : k;
+          if (v === '' || v === undefined) {
+            valid = false;
+            errorField = currentPath;
+            return;
+          }
+          if (typeof v === 'object' && v !== null) checkEmpty(v, currentPath);
+        }
+      }
+      checkEmpty(newJson);
+
+      if (!valid) {
+        msg.textContent = `El campo "${errorField}" no puede estar vacío.`;
+        msg.className = 'error';
+        return;
+      }
+
+      const res = await fetch(`/json-file?name=${encodeURIComponent(fileSelect.value)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newJson, null, 2)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        msg.textContent = data.message;
+        msg.className = 'success';
+      } else {
+        msg.textContent = data.error || 'Error al guardar';
+        msg.className = 'error';
+      }
+    }
+
+    fileSelect.addEventListener('change', e => loadFile(e.target.value));
+    saveBtn.addEventListener('click', saveFile);
+
+    loadFiles();
+  </script>
+</body>
+</html>
